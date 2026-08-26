@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MetricNest</title><link rel="stylesheet" href="/static/style.css"></head>
+<body><main>
+  <header><div><span class="eyebrow">METRICNEST</span><h1>Know what moves your business.</h1></div><button id="logout" class="ghost hidden">Log out</button></header>
+  <section id="auth" class="panel"><h2>Create your workspace</h2><p>Start a tenant-isolated KPI dashboard in seconds.</p><form id="register"><input name="workspace" placeholder="Workspace" required minlength="2"><input name="name" placeholder="Your name" required><input name="email" type="email" placeholder="Email" required><input name="password" type="password" placeholder="Password (8+ chars)" minlength="8" required><button>Create workspace</button></form><hr><form id="login"><input name="email" type="email" placeholder="Email" required><input name="password" type="password" placeholder="Password" required><button class="secondary">Sign in</button></form></section>
+  <section id="dashboard" class="hidden"><div class="toolbar"><div><h2 id="workspace">Dashboard</h2><p>Latest KPI values and targets</p></div><button id="newMetric">+ New metric</button></div><div id="metrics" class="grid"></div></section>
+  <dialog id="metricDialog"><form id="metricForm"><h2>Add a KPI</h2><input name="name" placeholder="Monthly recurring revenue" required><input name="unit" placeholder="USD, %, users..." required><input name="target" type="number" min="0" step="any" placeholder="Target" required><input name="owner" placeholder="Owner" required><div class="actions"><button type="button" id="cancel" class="ghost">Cancel</button><button>Save metric</button></div></form></dialog>
+  <p id="message"></p>
+</main><script src="/static/app.js"></script></body></html>
+
