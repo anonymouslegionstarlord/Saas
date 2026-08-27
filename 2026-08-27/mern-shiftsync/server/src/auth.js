@@ -1,0 +1,5 @@
+import jwt from 'jsonwebtoken';
+import {config} from './config.js';
+import {User} from './models.js';
+export const sign=user=>jwt.sign({sub:user.id,wid:user.workspaceId.toString()},config.secret,{expiresIn:'2h'});
+export async function requireAuth(req,res,next){try{const token=req.headers.authorization?.replace(/^Bearer\s+/i,'');const payload=jwt.verify(token,config.secret);const user=await User.findOne({_id:payload.sub,workspaceId:payload.wid}).select('-passwordHash');if(!user)return res.status(401).json({error:'Invalid session'});req.user=user;next()}catch{res.status(401).json({error:'Invalid or expired token'})}}

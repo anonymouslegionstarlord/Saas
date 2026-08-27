@@ -1,0 +1,9 @@
+import mongoose from 'mongoose';
+const opts={timestamps:true};
+const workspaceSchema=new mongoose.Schema({name:{type:String,required:true,trim:true,maxlength:80}},opts);
+const userSchema=new mongoose.Schema({workspaceId:{type:mongoose.Schema.Types.ObjectId,ref:'Workspace',required:true,index:true},name:{type:String,required:true,trim:true,maxlength:80},email:{type:String,required:true,unique:true,lowercase:true,trim:true},passwordHash:{type:String,required:true},role:{type:String,enum:['admin','member'],default:'admin'}},opts);
+const shiftSchema=new mongoose.Schema({workspaceId:{type:mongoose.Schema.Types.ObjectId,ref:'Workspace',required:true,index:true},employeeName:{type:String,required:true,trim:true,maxlength:80},employeeEmail:{type:String,required:true,lowercase:true,trim:true},date:{type:String,required:true,match:/^\d{4}-\d{2}-\d{2}$/},start:{type:String,required:true,match:/^\d{2}:\d{2}$/},end:{type:String,required:true,match:/^\d{2}:\d{2}$/},role:{type:String,required:true,trim:true,maxlength:60},notes:{type:String,trim:true,maxlength:300,default:''}},opts);
+shiftSchema.index({workspaceId:1,employeeEmail:1,date:1,start:1},{unique:true});
+export const Workspace=mongoose.model('Workspace',workspaceSchema);
+export const User=mongoose.model('User',userSchema);
+export const Shift=mongoose.model('Shift',shiftSchema);
