@@ -1,0 +1,8 @@
+import mongoose from 'mongoose';
+const opts={timestamps:true};
+const workspaceSchema=new mongoose.Schema({name:{type:String,required:true,trim:true,maxlength:80}},opts);
+const userSchema=new mongoose.Schema({workspaceId:{type:mongoose.Schema.Types.ObjectId,ref:'Workspace',required:true,index:true},name:{type:String,required:true,trim:true},email:{type:String,required:true,unique:true,lowercase:true,trim:true},passwordHash:{type:String,required:true}},opts);
+const fieldSchema=new mongoose.Schema({key:{type:String,required:true,trim:true},label:{type:String,required:true,trim:true,maxlength:100},type:{type:String,enum:['text','email','number','textarea'],default:'text'},required:{type:Boolean,default:false}},{_id:false});
+const formSchema=new mongoose.Schema({workspaceId:{type:mongoose.Schema.Types.ObjectId,ref:'Workspace',required:true,index:true},title:{type:String,required:true,trim:true,maxlength:120},description:{type:String,trim:true,maxlength:500,default:''},publicKey:{type:String,required:true,unique:true,index:true},published:{type:Boolean,default:true},fields:{type:[fieldSchema],validate:value=>value.length>0&&value.length<=20}},opts);
+const responseSchema=new mongoose.Schema({workspaceId:{type:mongoose.Schema.Types.ObjectId,ref:'Workspace',required:true,index:true},formId:{type:mongoose.Schema.Types.ObjectId,ref:'Form',required:true,index:true},answers:{type:Map,of:mongoose.Schema.Types.Mixed,required:true},respondentEmail:{type:String,lowercase:true,trim:true,default:''}},opts);
+export const Workspace=mongoose.model('Workspace',workspaceSchema);export const User=mongoose.model('User',userSchema);export const Form=mongoose.model('Form',formSchema);export const Response=mongoose.model('Response',responseSchema);
