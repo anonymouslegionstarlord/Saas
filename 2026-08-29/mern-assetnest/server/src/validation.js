@@ -1,0 +1,3 @@
+export const validEmail=value=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value||'');
+export function validateAsset(data){const errors=[];if(!/^[A-Za-z0-9_-]{2,30}$/.test(String(data.tag||'')))errors.push('tag');if(String(data.name||'').trim().length<2)errors.push('name');if(String(data.category||'').trim().length<2)errors.push('category');if(!Number.isFinite(Number(data.purchaseCost))||Number(data.purchaseCost)<0)errors.push('purchaseCost');return errors}
+export function validateCheckout(data){const errors=[];if(String(data.assignedTo||'').trim().length<2)errors.push('assignedTo');if(!/^\d{4}-\d{2}-\d{2}$/.test(data.dueDate||'')||Number.isNaN(Date.parse(data.dueDate+'T00:00:00Z')))errors.push('dueDate');return errors}
