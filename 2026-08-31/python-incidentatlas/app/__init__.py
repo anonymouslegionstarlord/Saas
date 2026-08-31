@@ -1,0 +1,1 @@
+"""IncidentAtlas application."""
