@@ -1,0 +1,18 @@
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import './style.css';
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const stages = ['idea','draft','review','approved','published'];
+function App(){
+ const [token,setToken]=useState(localStorage.token||''); const [data,setData]=useState({items:[],counts:{}}); const [error,setError]=useState(''); const [mode,setMode]=useState('register');
+ const api=async(path,options={})=>{const r=await fetch(API+path,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})}});const d=r.status===204?null:await r.json();if(!r.ok)throw Error(d.error||'Request failed');return d};
+ const load=()=>token&&api('/items').then(setData).catch(e=>setError(e.message)); useEffect(load,[token]);
+ const auth=async e=>{e.preventDefault();setError('');try{const body=Object.fromEntries(new FormData(e.currentTarget));const d=await api(`/auth/${mode}`,{method:'POST',body:JSON.stringify(body)});localStorage.token=d.token;setToken(d.token)}catch(x){setError(x.message)}};
+ const add=async e=>{e.preventDefault();try{await api('/items',{method:'POST',body:JSON.stringify(Object.fromEntries(new FormData(e.currentTarget)))});e.currentTarget.reset();load()}catch(x){setError(x.message)}};
+ const advance=async item=>{const next=stages[stages.indexOf(item.status)+1];if(!next)return;try{await api(`/items/${item._id}/transition`,{method:'PATCH',body:JSON.stringify({status:next,reviewerNote:''})});load()}catch(x){setError(x.message)}};
+ if(!token)return <main className="auth"><section><h1>ContentLane</h1><p>Move every idea smoothly from brief to publish.</p></section><form onSubmit={auth}><h2>{mode==='register'?'Create workspace':'Welcome back'}</h2>{mode==='register'&&<><input name="workspace" placeholder="Workspace" required/><input name="name" placeholder="Your name" required/></>}<input name="email" type="email" placeholder="Email" required/><input name="password" type="password" minLength="8" placeholder="Password" required/><button>{mode==='register'?'Start planning':'Sign in'}</button><a onClick={()=>setMode(mode==='register'?'login':'register')}>{mode==='register'?'Already have an account?':'Create a workspace'}</a><p className="error">{error}</p></form></main>;
+ return <><header><div><h1>ContentLane</h1><span>Editorial command center</span></div><button className="quiet" onClick={()=>{localStorage.removeItem('token');setToken('')}}>Sign out</button></header><main><div className="stats">{stages.map(s=><div className="stat" key={s}><b>{data.counts[s]||0}</b><span>{s}</span></div>)}</div><div className="layout"><form onSubmit={add}><h2>New content brief</h2><input name="title" placeholder="Title" required/><select name="channel"><option>blog</option><option>email</option><option>social</option><option>video</option></select><input name="owner" placeholder="Owner" required/><input name="dueDate" type="date" required/><textarea name="brief" placeholder="Audience, angle, CTA…"/><button>Add to lane</button></form><section><h2>Publishing lane</h2><div className="cards">{data.items.map(i=><article key={i._id}><div><span className="pill">{i.channel}</span><span className="status">{i.status}</span></div><h3>{i.title}</h3><p>{i.brief||'No brief yet.'}</p><small>{i.owner} · {new Date(i.dueDate).toLocaleDateString()}</small>{i.status!=='published'&&<button onClick={()=>advance(i)}>Move to {stages[stages.indexOf(i.status)+1]}</button>}</article>)}</div></section></div><p className="error">{error}</p></main></>;
+}
+createRoot(document.getElementById('root')).render(<App/>);
+
