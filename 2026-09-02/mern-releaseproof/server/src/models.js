@@ -1,0 +1,7 @@
+import mongoose from 'mongoose';
+const userSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},name:{type:String,required:true,trim:true},email:{type:String,required:true,unique:true,lowercase:true,trim:true},passwordHash:{type:String,required:true}},{timestamps:true});
+const releaseSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},name:{type:String,required:true,trim:true},version:{type:String,required:true,trim:true},targetDate:{type:Date,required:true},owner:{type:String,required:true,trim:true},status:{type:String,enum:['planning','testing','ready','shipped'],default:'planning'}},{timestamps:true});
+releaseSchema.index({tenantId:1,version:1},{unique:true});
+const checkSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},releaseId:{type:mongoose.Schema.Types.ObjectId,ref:'Release',required:true,index:true},title:{type:String,required:true,trim:true},area:{type:String,enum:['functional','regression','security','performance','deployment'],required:true},priority:{type:String,enum:['low','medium','high','critical'],required:true},result:{type:String,enum:['not_run','passed','failed','blocked'],default:'not_run'},evidence:{type:String,default:'',maxlength:1000}},{timestamps:true});
+export const User=mongoose.model('User',userSchema);export const Release=mongoose.model('Release',releaseSchema);export const Check=mongoose.model('Check',checkSchema);
+
