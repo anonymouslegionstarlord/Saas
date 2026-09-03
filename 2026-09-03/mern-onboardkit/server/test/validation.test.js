@@ -1,0 +1,4 @@
+import test from'node:test';import assert from'node:assert/strict';import{clientSchema,progress,registerSchema,taskSchema}from'../src/validation.js';
+test('validates registration',()=>{assert.equal(registerSchema.safeParse({name:'Owner',workspace:'Acme',email:'a@b.test',password:'password1'}).success,true);assert.equal(registerSchema.safeParse({name:'O',workspace:'A',email:'bad',password:'x'}).success,false)});
+test('validates clients and tasks',()=>{assert.equal(clientSchema.safeParse({company:'Northstar',contactName:'Ava',contactEmail:'ava@example.test',owner:'Mayank',targetDate:'2026-09-10'}).success,true);assert.equal(taskSchema.safeParse({title:'X',category:'unknown',dueDate:'bad',assignee:''}).success,false)});
+test('calculates completion progress',()=>{assert.equal(progress([]),0);assert.equal(progress([{status:'done'},{status:'doing'},{status:'done'}]),67)});

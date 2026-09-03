@@ -1,0 +1,7 @@
+import mongoose from 'mongoose';
+const userSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},name:{type:String,required:true,trim:true},email:{type:String,required:true,unique:true,lowercase:true,trim:true},passwordHash:{type:String,required:true}},{timestamps:true});
+const clientSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},company:{type:String,required:true,trim:true},contactName:{type:String,required:true,trim:true},contactEmail:{type:String,required:true,trim:true,lowercase:true},owner:{type:String,required:true,trim:true},targetDate:{type:Date,required:true},status:{type:String,enum:['not_started','active','blocked','completed'],default:'not_started'}},{timestamps:true});
+clientSchema.index({tenantId:1,company:1},{unique:true});
+const taskSchema=new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},clientId:{type:mongoose.Schema.Types.ObjectId,ref:'Client',required:true,index:true},title:{type:String,required:true,trim:true},category:{type:String,enum:['discovery','data','access','training','launch'],required:true},dueDate:{type:Date,required:true},assignee:{type:String,required:true,trim:true},status:{type:String,enum:['todo','doing','blocked','done'],default:'todo'},note:{type:String,default:'',maxlength:1000}},{timestamps:true});
+export const User=mongoose.model('User',userSchema);export const Client=mongoose.model('Client',clientSchema);export const Task=mongoose.model('Task',taskSchema);
+
