@@ -1,0 +1,2 @@
+{"name":"referraldesk","private":true,"version":"1.0.0","workspaces":["server","client"],"scripts":{"dev":"concurrently \"npm run dev -w server\" \"npm run dev -w client\"","test":"npm test -w server","build":"npm run build -w client","seed":"npm run seed -w server"},"devDependencies":{"concurrently":"9.2.1"}}
+
