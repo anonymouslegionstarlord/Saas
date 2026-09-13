@@ -1,0 +1,22 @@
+import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { requireAuth, tokenFor } from './auth.js';
+import { Lease, Property, Tenant, User } from './models.js';
+import { leaseSchema, loginSchema, occupancyMetrics, propertySchema, registerSchema } from './validation.js';
+
+export const router = Router();
+const validate = schema => (req, res, next) => { const result = schema.safeParse(req.body); if (!result.success) return res.status(422).json({ error: 'Validation failed', details: result.error.issues }); req.validated = result.data; next(); };
+
+router.post('/auth/register', validate(registerSchema), async (req, res, next) => { try { const { organization, email, password } = req.validated; if (await User.exists({ email: email.toLowerCase() })) return res.status(409).json({ error: 'Email already registered' }); const tenant = await Tenant.create({ name: organization }); try { const user = await User.create({ tenantId: tenant._id, email: email.toLowerCase(), passwordHash: await bcrypt.hash(password, 12) }); res.status(201).json({ accessToken: tokenFor(user) }); } catch (error) { await Tenant.deleteOne({ _id: tenant._id }); throw error; } } catch (e) { next(e); } });
+router.post('/auth/login', validate(loginSchema), async (req, res, next) => { try { const user = await User.findOne({ email: req.validated.email.toLowerCase() }); if (!user || !await bcrypt.compare(req.validated.password, user.passwordHash)) return res.status(401).json({ error: 'Invalid email or password' }); res.json({ accessToken: tokenFor(user) }); } catch (e) { next(e); } });
+
+router.use(requireAuth);
+router.get('/properties', async (req, res, next) => { try { res.json(await Property.find({ tenantId: req.auth.tenantId }).sort({ name: 1 })); } catch (e) { next(e); } });
+router.post('/properties', validate(propertySchema), async (req, res, next) => { try { res.status(201).json(await Property.create({ ...req.validated, tenantId: req.auth.tenantId })); } catch (e) { next(e); } });
+router.delete('/properties/:id', async (req, res, next) => { try { if (await Lease.exists({ tenantId: req.auth.tenantId, propertyId: req.params.id, status: { $ne: 'ended' } })) return res.status(409).json({ error: 'End active leases before deleting this property' }); const item = await Property.findOneAndDelete({ _id: req.params.id, tenantId: req.auth.tenantId }); if (!item) return res.status(404).json({ error: 'Property not found' }); res.status(204).end(); } catch (e) { next(e); } });
+router.get('/leases', async (req, res, next) => { try { res.json(await Lease.find({ tenantId: req.auth.tenantId }).populate('propertyId', 'name').sort({ endDate: 1 })); } catch (e) { next(e); } });
+router.post('/leases', validate(leaseSchema), async (req, res, next) => { try { const property = await Property.findOne({ _id: req.validated.propertyId, tenantId: req.auth.tenantId }); if (!property) return res.status(404).json({ error: 'Property not found' }); if (req.validated.status === 'active' && await Lease.exists({ tenantId: req.auth.tenantId, propertyId: property._id, unitLabel: req.validated.unitLabel, status: 'active' })) return res.status(409).json({ error: 'Unit already has an active lease' }); res.status(201).json(await Lease.create({ ...req.validated, tenantId: req.auth.tenantId })); } catch (e) { next(e); } });
+router.patch('/leases/:id/status', validate(zStatus()), async (req, res, next) => { try { const lease = await Lease.findOne({ _id: req.params.id, tenantId: req.auth.tenantId }); if (!lease) return res.status(404).json({ error: 'Lease not found' }); if (req.validated.status === 'active' && await Lease.exists({ _id: { $ne: lease._id }, tenantId: req.auth.tenantId, propertyId: lease.propertyId, unitLabel: lease.unitLabel, status: 'active' })) return res.status(409).json({ error: 'Unit already has an active lease' }); lease.status = req.validated.status; await lease.save(); res.json(lease); } catch (e) { next(e); } });
+router.get('/dashboard', async (req, res, next) => { try { const [properties, leases] = await Promise.all([Property.find({ tenantId: req.auth.tenantId }).lean(), Lease.find({ tenantId: req.auth.tenantId }).lean()]); res.json(occupancyMetrics(properties, leases)); } catch (e) { next(e); } });
+
+function zStatus() { return { safeParse(value) { const ok = value && ['draft', 'active', 'ended'].includes(value.status); return ok ? { success: true, data: { status: value.status } } : { success: false, error: { issues: [{ path: ['status'], message: 'Invalid status' }] } }; } }; }
