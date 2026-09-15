@@ -1,0 +1,2 @@
+import jwt from'jsonwebtoken';import{config}from'./config.js';export const tokenFor=u=>jwt.sign({sub:u._id.toString(),tenantId:u.tenantId.toString()},config.jwtSecret,{expiresIn:'8h'});export function requireAuth(q,r,n){const v=q.headers.authorization||'';if(!v.startsWith('Bearer '))return r.status(401).json({error:'Missing bearer token'});try{q.auth=jwt.verify(v.slice(7),config.jwtSecret);n()}catch{r.status(401).json({error:'Invalid or expired token'})}}
+

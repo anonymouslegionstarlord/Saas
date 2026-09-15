@@ -1,0 +1,5 @@
+import mongoose from'mongoose';const o={timestamps:true};
+export const Tenant=mongoose.model('Tenant',new mongoose.Schema({name:{type:String,required:true,trim:true}},o));
+export const User=mongoose.model('User',new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},email:{type:String,required:true,unique:true,lowercase:true},passwordHash:{type:String,required:true}},o));
+export const PurchaseRequest=mongoose.model('PurchaseRequest',new mongoose.Schema({tenantId:{type:mongoose.Schema.Types.ObjectId,required:true,index:true},title:{type:String,required:true,trim:true},department:{type:String,required:true,trim:true},vendor:{type:String,required:true,trim:true},amountCents:{type:Number,required:true,min:1},neededBy:{type:Date,required:true},justification:{type:String,required:true,trim:true},status:{type:String,enum:['draft','submitted','approved','rejected'],default:'draft'},reviewerNote:{type:String,default:'',trim:true},reviewedAt:{type:Date,default:null}},o));
+
